@@ -6,6 +6,10 @@ from agents.config import AGENTS
 from agents.engine import AgentEngine
 
 
+# ============================================================
+# 页面设置
+# ============================================================
+
 st.set_page_config(
     page_title="UniAgent Space",
     page_icon="🎓",
@@ -16,7 +20,7 @@ st.set_page_config(
 
 # ============================================================
 # 背景图片
-# background.jpg 需要和 app.py 放在同一个文件夹
+# background.jpg 与 app.py 放在同一个文件夹
 # ============================================================
 
 def get_base64_image(image_path):
@@ -24,10 +28,8 @@ def get_base64_image(image_path):
         return base64.b64encode(f.read()).decode()
 
 
-# 获取 app.py 所在的文件夹
 BASE_DIR = Path(__file__).resolve().parent
 
-# 从 app.py 所在文件夹读取 background.jpg
 bg_image_path = BASE_DIR / "background.jpg"
 
 bg_image = get_base64_image(bg_image_path)
@@ -37,11 +39,12 @@ bg_image = get_base64_image(bg_image_path)
 # 页面样式
 # ============================================================
 
-st.markdown(f"""
+st.markdown(
+    f"""
 <style>
 
 /* ============================================================
-   页面背景图片
+   整体背景
    ============================================================ */
 
 .stApp {{
@@ -59,7 +62,7 @@ st.markdown(f"""
 
 
 /* ============================================================
-   页面标题
+   主标题
    ============================================================ */
 
 .main-title {{
@@ -70,7 +73,7 @@ st.markdown(f"""
 
 
 /* ============================================================
-   页面副标题
+   副标题
    ============================================================ */
 
 .subtitle {{
@@ -89,6 +92,23 @@ st.markdown(f"""
     border: 1px solid rgba(128,128,128,.25);
     border-radius: 16px;
     min-height: 150px;
+
+    background: rgba(20, 22, 30, 0.88);
+
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+
+    box-sizing: border-box;
+}}
+
+
+/* ============================================================
+   Agent 名称
+   ============================================================ */
+
+.agent-name {{
+    font-size: 17px;
+    font-weight: 700;
 }}
 
 
@@ -99,6 +119,7 @@ st.markdown(f"""
 .small {{
     font-size: 13px;
     opacity: .72;
+    line-height: 1.7;
 }}
 
 
@@ -115,21 +136,20 @@ st.markdown(f"""
 
 
 /* ============================================================
-   左侧导航栏
-   保持原来的深色风格
+   左侧栏
    ============================================================ */
 
 [data-testid="stSidebar"] {{
-    background: rgba(20, 21, 30, 0.95);
+    background: rgba(20, 21, 30, 0.96);
 }}
 
 
 /* ============================================================
-   聊天输入框
+   输入框
    ============================================================ */
 
 [data-testid="stChatInput"] {{
-    background: rgba(20, 21, 30, 0.90);
+    background: rgba(20, 21, 30, 0.92);
 }}
 
 
@@ -142,7 +162,9 @@ hr {{
 }}
 
 </style>
-""", unsafe_allow_html=True)
+""",
+    unsafe_allow_html=True,
+)
 
 
 # ============================================================
@@ -173,7 +195,7 @@ selected_agent = agent_map[
 
 
 # ============================================================
-# Sidebar
+# 左侧栏目
 # ============================================================
 
 with st.sidebar:
@@ -186,6 +208,7 @@ with st.sidebar:
 
     st.subheader("10 个独立智能体")
 
+    # 左侧栏目严格按照 AGENTS 顺序
     for a in AGENTS:
 
         if st.button(
@@ -207,7 +230,7 @@ with st.sidebar:
 
 
 # ============================================================
-# 页面标题
+# 主页面标题
 # ============================================================
 
 st.markdown(
@@ -224,7 +247,14 @@ st.markdown(
 
 
 # ============================================================
-# Agent Cards
+# 10 个 Agent 卡片
+#
+# 这里与左侧栏目使用完全相同的 AGENTS 数据和顺序。
+#
+# 第1个卡片 = 左侧第1个
+# 第2个卡片 = 左侧第2个
+# ...
+# 第10个卡片 = 左侧第10个
 # ============================================================
 
 cols = st.columns(5)
@@ -233,30 +263,31 @@ for i, a in enumerate(AGENTS):
 
     with cols[i % 5]:
 
+        # 使用没有缩进的 HTML，避免 Streamlit 将 HTML
+        # 识别成代码文本
+        card_html = f"""
+<div class="agent-card">
+    <div style="font-size:30px">{a['icon']}</div>
+
+    <div class="agent-name">
+        {a['name']}
+    </div>
+
+    <div class="small">
+        {a['category']} · 独立 Prompt · 独立任务
+    </div>
+
+    <br>
+
+    <div class="small">
+        {a['goal']}
+    </div>
+</div>
+"""
+
         st.markdown(
-            f"""
-            <div class="agent-card">
-
-                <div style="font-size:30px">
-                    {a['icon']}
-                </div>
-
-                <b>{a['name']}</b>
-                <br>
-
-                <span class="small">
-                    {a['category']} · 独立 Prompt · 独立任务
-                </span>
-
-                <br><br>
-
-                <span class="small">
-                    {a['goal']}
-                </span>
-
-            </div>
-            """,
-            unsafe_allow_html=True,
+            card_html,
+            unsafe_allow_html=True
         )
 
 
@@ -288,7 +319,7 @@ st.write(
 
 
 # ============================================================
-# Data Agent 文件上传
+# 数据分析 Agent
 # ============================================================
 
 if a["id"] == "data":
@@ -307,7 +338,7 @@ if a["id"] == "data":
 
 
 # ============================================================
-# Chat History
+# 聊天记录
 # ============================================================
 
 history = st.session_state.messages.setdefault(
@@ -318,7 +349,9 @@ history = st.session_state.messages.setdefault(
 
 for m in history:
 
-    with st.chat_message(m["role"]):
+    with st.chat_message(
+        m["role"]
+    ):
 
         st.markdown(
             m["content"]
@@ -386,7 +419,7 @@ st.caption(
 
 
 # ============================================================
-# Chat Input
+# 聊天输入
 # ============================================================
 
 user_input = st.chat_input(
